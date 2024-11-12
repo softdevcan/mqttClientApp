@@ -13,21 +13,19 @@ A web-based MQTT client application built with FastAPI and Python, providing a u
 
 Screenshots
 
-Connection Page
+*Home Page*
 
-<img src="./images/connect.png" alt="Connection Page" width="400"/>
+<img src="./images/home.png" alt="Message History" width="600"/>
 
 *MQTT Broker Connection Interface*
 
-Dashboard
-
-<img src="./images/dashboard.png" alt="Dashboard" width="400"/>
+<img src="./images/connect.png" alt="Connection Page" width="600"/>
 
 *Main Dashboard with Publish/Subscribe Features*
 
-Home Page
+<img src="./images/dashboard.png" alt="Dashboard" width="600"/>
 
-<img src="./images/home.png" alt="Message History" width="400"/>
+
 
 ## Prerequisites
 
