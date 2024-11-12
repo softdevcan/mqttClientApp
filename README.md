@@ -26,7 +26,6 @@ Screenshots
 <img src="./images/dashboard.png" alt="Dashboard" width="600"/>
 
 
-
 ## Prerequisites
 
 - Docker and Docker Compose
