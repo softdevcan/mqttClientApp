@@ -11,6 +11,24 @@ A web-based MQTT client application built with FastAPI and Python, providing a u
 - 🎨 Clean web interface
 - 🐳 Docker support
 
+Screenshots
+
+Connection Page
+
+<img src="./images/connect.png" alt="Connection Page" width="400"/>
+
+*MQTT Broker Connection Interface*
+
+Dashboard
+
+<img src="./images/dashboard.png" alt="Dashboard" width="400"/>
+
+*Main Dashboard with Publish/Subscribe Features*
+
+Home Page
+
+<img src="./images/home.png" alt="Message History" width="400"/>
+
 ## Prerequisites
 
 - Docker and Docker Compose
@@ -77,4 +95,4 @@ pytest
 
 ## License
 
-MIT License
+MIT License - see the [LICENSE](LICENSE) file for details.
