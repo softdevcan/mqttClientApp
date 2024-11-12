@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  mqtt-client-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mqtt-client-app
+    ports:
+      - "8011:8011"  # FastAPI default port
+    environment:
+      - MQTT_BROKER_HOST=host.docker.internal
+      - MQTT_BROKER_PORT=1883
+#      - MQTT_USERNAME=your_username  # İsteğe bağlı
+#      - MQTT_PASSWORD=your_password  # İsteğe bağlı
+      - MQTT_CLIENT_ID=mqtt_client_1
+      - API_HOST=0.0.0.0
+      - API_PORT=8011
+    networks:
+      - mqtt-client-network
+    restart: unless-stopped
+
+networks:
+  mqtt-client-network:
+    driver: bridge

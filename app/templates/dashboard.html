@@ -1,0 +1,486 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - MQTT Client{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold">MQTT Dashboard</h1>
+        <div id="connectionStatus">
+        <!-- Bağlantı durumu buraya dinamik olarak gelecek -->
+        </div>
+    </div>
+    <!-- Messages Panel'den sonra, Status Message'dan önce ekle -->
+    <div id="noConnectionMessage" class="hidden text-center py-10">
+        <div class="mb-4">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">No MQTT Connection</h3>
+            <p class="mt-1 text-sm text-gray-500">You are currently not connected to any MQTT broker.</p>
+        </div>
+        <div>
+            <button type="button"
+                    onclick="window.location.href='/connect'"
+                    class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                Connect to Broker
+            </button>
+        </div>
+    </div>
+    <div id="dashboardContent" class="hidden">
+        <div class="grid md:grid-cols-2 gap-6">
+            <!-- Subscribe Panel -->
+            <div class="bg-white shadow-md rounded-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">Subscribe</h2>
+                <form id="subscribeForm" class="space-y-4">
+                    <div>
+                        <label for="subTopic" class="block text-sm font-medium text-gray-700">Topic</label>
+                        <input type="text" id="subTopic" name="topic"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                               placeholder="example/topic/#" required>
+                    </div>
+
+                    <div>
+                        <label for="subQos" class="block text-sm font-medium text-gray-700">QoS</label>
+                        <select id="subQos" name="qos"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                            <option value="0">0 - At most once</option>
+                            <option value="1">1 - At least once</option>
+                            <option value="2">2 - Exactly once</option>
+                        </select>
+                    </div>
+
+                    <button type="submit"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent bg-green-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        Subscribe
+                    </button>
+                </form>
+
+                <div class="mt-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-2">Active Subscriptions</h3>
+                    <div id="subscriptionsList" class="border rounded-md p-4 min-h-[100px] max-h-[200px] overflow-y-auto">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Publish Panel -->
+            <div class="bg-white shadow-md rounded-lg p-6">
+                <h2 class="text-xl font-semibold mb-4">Publish</h2>
+                <form id="publishForm" class="space-y-4">
+                    <div>
+                        <label for="pubTopic" class="block text-sm font-medium text-gray-700">Topic</label>
+                        <input type="text" id="pubTopic" name="topic"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                               placeholder="example/topic" required>
+                    </div>
+
+                    <div>
+                        <label for="pubMessage" class="block text-sm font-medium text-gray-700">Message</label>
+                        <textarea id="pubMessage" name="message" rows="4"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                                required></textarea>
+                    </div>
+
+                    <div class="flex space-x-4">
+                        <div class="flex-1">
+                            <label for="pubQos" class="block text-sm font-medium text-gray-700">QoS</label>
+                            <select id="pubQos" name="qos"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                <option value="0">0 - At most once</option>
+                                <option value="1">1 - At least once</option>
+                                <option value="2">2 - Exactly once</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-end pb-2">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" id="retain" name="retain"
+                                       class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                                <span class="ml-2 text-sm text-gray-700">Retain</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit"
+                            class="w-full inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Publish
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Messages Panel -->
+        <div class="mt-6 bg-white shadow-md rounded-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">Messages</h2>
+                <button onclick="clearMessages()"
+                        class="text-gray-500 hover:text-gray-700">
+                    Clear
+                </button>
+            </div>
+            <div id="messages"
+                 class="font-mono text-sm border rounded-md p-4 h-[400px] overflow-y-auto space-y-2">
+            </div>
+        </div>
+
+
+    </div>
+    <!-- Status Message -->
+    <div id="statusMessage" class="hidden fixed bottom-4 right-4 max-w-sm bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg"></div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+<script>
+let ws = null;
+const subscriptions = new Set();
+let isConnected = false;
+let wsConnected = false;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 3;
+
+function showStatus(message, isError = false) {
+    const statusEl = document.getElementById('statusMessage');
+    statusEl.textContent = message;
+    statusEl.classList.remove('hidden', 'bg-gray-800', 'bg-red-500');
+    statusEl.classList.add(isError ? 'bg-red-500' : 'bg-gray-800');
+    setTimeout(() => statusEl.classList.add('hidden'), 3000);
+}
+
+function connectWebSocket() {
+    if (ws?.readyState === WebSocket.OPEN) {
+        console.log('WebSocket already connected');
+        return;
+    }
+
+    try {
+        console.log('Initiating WebSocket connection');
+        ws = new WebSocket(`ws://${window.location.host}/ws`);
+
+        ws.onopen = function() {
+            console.log('WebSocket connected successfully');
+            wsConnected = true;
+            reconnectAttempts = 0;
+            updateConnectionStatus();
+        };
+
+        ws.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                console.log('Received message:', data);
+                if (data.type === 'message') {
+                    appendMessage(`[${data.topic}] ${data.payload}`);
+                } else if (data.type === 'status') {
+                    showStatus(data.message);
+                }
+            } catch (error) {
+                console.error('Error parsing message:', error);
+            }
+        };
+
+        ws.onclose = function() {
+            console.log('WebSocket connection closed');
+            wsConnected = false;
+            updateConnectionStatus();
+
+            if (isConnected && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                reconnectAttempts++;
+                console.log(`Attempting to reconnect (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})`);
+                setTimeout(connectWebSocket, 2000);
+            }
+        };
+
+        ws.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            wsConnected = false;
+            updateConnectionStatus();
+        };
+    } catch (error) {
+        console.error('Error creating WebSocket:', error);
+        wsConnected = false;
+        updateConnectionStatus();
+    }
+}
+
+function appendMessage(message) {
+    console.log('Appending message:', message);
+    const messagesDiv = document.getElementById('messages');
+    if (!messagesDiv) {
+        console.error('Messages div not found!');
+        return;
+    }
+
+    const timestamp = new Date().toLocaleTimeString();
+    const messageElement = document.createElement('div');
+    messageElement.className = 'py-1 border-b border-gray-200';
+    messageElement.innerHTML = `<span class="text-gray-500">[${timestamp}]</span> ${message}`;
+    messagesDiv.appendChild(messageElement);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function clearMessages() {
+    const messagesDiv = document.getElementById('messages');
+    messagesDiv.innerHTML = '';
+}
+
+function updateSubscriptionsList() {
+    const list = document.getElementById('subscriptionsList');
+    list.innerHTML = '';
+
+    subscriptions.forEach(topic => {
+        const li = document.createElement('div');
+        li.className = 'flex justify-between items-center py-2';
+        li.innerHTML = `
+            <span class="text-gray-700">${topic}</span>
+            <button onclick="unsubscribe('${topic}')"
+                    class="text-red-500 hover:text-red-700 text-sm">
+                Unsubscribe
+            </button>
+        `;
+        list.appendChild(li);
+    });
+}
+
+async function subscribe(event) {
+    event.preventDefault();
+    const form = document.getElementById('subscribeForm');
+    const formData = new FormData(form);
+
+    try {
+        const response = await fetch('/api/subscribe', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+        showStatus(data.message, data.status !== 'success');
+
+        if (data.status === 'success') {
+            subscriptions.add(formData.get('topic'));
+            updateSubscriptionsList();
+            form.reset();
+        }
+    } catch (error) {
+        showStatus('Failed to subscribe', true);
+    }
+}
+
+async function unsubscribe(topic) {
+    const formData = new FormData();
+    formData.append('topic', topic);
+
+    try {
+        const response = await fetch('/api/unsubscribe', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+        showStatus(data.message, data.status !== 'success');
+
+        if (data.status === 'success') {
+            subscriptions.delete(topic);
+            updateSubscriptionsList();
+        }
+    } catch (error) {
+        showStatus('Failed to unsubscribe', true);
+    }
+}
+
+async function publish(event) {
+    event.preventDefault();
+    const form = document.getElementById('publishForm');
+    const formData = new FormData(form);
+
+    formData.set('qos', parseInt(formData.get('qos')));
+    const retainCheckbox = form.querySelector('input[name="retain"]');
+    formData.set('retain', retainCheckbox.checked.toString());
+
+    const publishData = {
+        topic: formData.get('topic'),
+        message: formData.get('message'),
+        qos: formData.get('qos'),
+        retain: formData.get('retain')
+    };
+
+    console.log('Publishing message:', publishData);
+
+    try {
+        const response = await fetch('/api/publish', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Publish error:', errorData);
+            showStatus(errorData.detail || 'Failed to publish message', true);
+            return;
+        }
+
+        const data = await response.json();
+        console.log('Publish response:', data);
+        showStatus(data.message, data.status !== 'success');
+
+        if (data.status === 'success') {
+            // Kendi mesajımızı da messages paneline ekleyelim
+            // appendMessage(`[${publishData.topic}] ${publishData.message} (Published)`);
+            form.reset();
+        }
+    } catch (error) {
+        console.error('Publish error:', error);
+        showStatus('Failed to publish message', true);
+    }
+}
+
+async function checkConnectionStatus() {
+    try {
+        const response = await fetch('/api/connection-status');
+        const data = await response.json();
+        isConnected = data.status === 'connected';
+        updateConnectionStatus();
+
+        // Eğer bağlıysak ve WebSocket bağlı değilse, WebSocket'i yeniden bağla
+        if (isConnected && !wsConnected) {
+            connectWebSocket();
+        }
+    } catch (error) {
+        console.error('Connection status check failed:', error);
+        showStatus('Failed to check connection status', true);
+    }
+}
+
+function updateConnectionStatus() {
+    const connectionStatus = document.getElementById('connectionStatus');
+    const dashboardContent = document.getElementById('dashboardContent');
+    const noConnectionMessage = document.getElementById('noConnectionMessage');
+
+    if (isConnected) {
+        const wsStatus = wsConnected ?
+            '<span class="text-green-500">(WebSocket Connected)</span>' :
+            '<span class="text-red-500">(WebSocket Disconnected)</span>';
+
+        connectionStatus.innerHTML = `
+            <div class="flex items-center space-x-2">
+                <span class="flex h-3 w-3">
+                    <span class="animate-ping absolute inline-flex h-3 w-3 rounded-full bg-green-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+                </span>
+                <span class="text-sm text-gray-600">Connected ${wsStatus}</span>
+                <div class="ml-4 space-x-2">
+                    <button onclick="handleDisconnect()"
+                            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded text-sm">
+                        Disconnect
+                    </button>
+                    ${!wsConnected ? `
+                        <button onclick="handleReconnectWebSocket()"
+                                class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded text-sm">
+                            Reconnect WebSocket
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        `;
+        dashboardContent.classList.remove('hidden');
+        noConnectionMessage.classList.add('hidden');
+    } else {
+        connectionStatus.innerHTML = `
+            <div class="flex items-center space-x-2">
+                <span class="flex h-3 w-3">
+                    <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                </span>
+                <span class="text-sm text-gray-600">Not Connected</span>
+                <button onclick="window.location.href='/connect'"
+                        class="ml-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded text-sm">
+                    Connect
+                </button>
+            </div>
+        `;
+        dashboardContent.classList.add('hidden');
+        noConnectionMessage.classList.remove('hidden');
+    }
+}
+
+async function handleDisconnect() {
+    try {
+        // Önce WebSocket bağlantısını kapat
+        if (ws) {
+            ws.close();
+            ws = null;
+        }
+        wsConnected = false;
+
+        const response = await fetch('/api/disconnect', {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+        showStatus(data.message, data.status !== 'success');
+
+        if (data.status === 'success') {
+            isConnected = false;
+            window.location.href = '/connect';
+        }
+    } catch (error) {
+        console.error('Disconnect error:', error);
+        showStatus('Failed to disconnect', true);
+    }
+}
+
+function handleReconnectWebSocket() {
+    reconnectAttempts = 0;
+    connectWebSocket();
+}
+
+async function disconnect() {
+    try {
+        // Önce WebSocket bağlantısını temizle
+        if (ws) {
+            ws.close();
+            ws = null;
+        }
+        if (reconnectTimeout) {
+            clearTimeout(reconnectTimeout);
+            reconnectTimeout = null;
+        }
+
+        const response = await fetch('/api/disconnect', {
+            method: 'POST'
+        });
+
+        const data = await response.json();
+        showStatus(data.message, data.status !== 'success');
+
+        if (data.status === 'success') {
+            isConnected = false;
+            wsConnected = false;
+            window.location.href = '/connect';
+        }
+    } catch (error) {
+        showStatus('Failed to disconnect', true);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Document ready, initializing...');
+
+    checkConnectionStatus();
+
+    // Event listeners
+    document.getElementById('subscribeForm').addEventListener('submit', subscribe);
+    document.getElementById('publishForm').addEventListener('submit', publish);
+    updateSubscriptionsList();
+
+    // Periyodik kontrol (30 saniyede bir)
+    setInterval(checkConnectionStatus, 30000);
+});
+
+// Manuel yeniden bağlanma fonksiyonu
+function manualReconnect() {
+    reconnectAttempts = 0; // Sayacı sıfırla
+    connectWebSocket();
+}
+
+
+</script>
+{% endblock scripts %}

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Home - MQTT Client{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-8">Welcome to MQTT Client</h1>
+    
+    <div class="bg-white shadow-md rounded-lg p-6 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Getting Started</h2>
+        <p class="mb-4">Follow these steps to start using the MQTT client:</p>
+        <ol class="list-decimal list-inside space-y-2">
+            <li>Go to the <a href="/connect" class="text-blue-500 hover:text-blue-600">Connect</a> page to establish a connection with your MQTT broker</li>
+            <li>Once connected, you'll be redirected to the <a href="/dashboard" class="text-blue-500 hover:text-blue-600">Dashboard</a></li>
+            <li>In the dashboard, you can:
+                <ul class="list-disc list-inside ml-6 mt-2 space-y-1">
+                    <li>Subscribe to topics</li>
+                    <li>Publish messages</li>
+                    <li>View incoming messages</li>
+                    <li>Manage your subscriptions</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Features</h2>
+            <ul class="list-disc list-inside space-y-2">
+                <li>Real-time message updates via WebSocket</li>
+                <li>Support for QoS levels 0, 1, and 2</li>
+                <li>Retained message support</li>
+                <li>Multiple topic subscriptions</li>
+                <li>Clean and intuitive interface</li>
+                <li>Message history view</li>
+            </ul>
+        </div>
+
+        <div class="bg-white shadow-md rounded-lg p-6">
+            <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
+            <div class="space-y-4">
+                <a href="/connect" 
+                   class="block w-full py-2 px-4 bg-blue-500 text-white text-center rounded hover:bg-blue-600 transition-colors">
+                    Connect to Broker
+                </a>
+                <a href="/dashboard" 
+                   class="block w-full py-2 px-4 bg-green-500 text-white text-center rounded hover:bg-green-600 transition-colors">
+                    Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

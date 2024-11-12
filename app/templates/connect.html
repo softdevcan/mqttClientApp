@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Connect - MQTT Client{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <h1 class="text-3xl font-bold mb-8">Connect to MQTT Broker</h1>
+    
+    <div class="bg-white shadow-md rounded-lg p-6">
+        <form id="connectForm" class="space-y-4">
+            <div>
+                <label for="host" class="block text-sm font-medium text-gray-700">Broker Host</label>
+                <input type="text" id="host" name="host" 
+                       value="{{ default_host }}"
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                       required>
+            </div>
+            
+            <div>
+                <label for="port" class="block text-sm font-medium text-gray-700">Port</label>
+                <input type="number" id="port" name="port" 
+                       value="{{ default_port }}"
+                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                       required>
+            </div>
+            
+            <div class="border-t border-gray-200 pt-4">
+                <div class="flex items-center">
+                    <input type="checkbox" id="useAuth" 
+                           class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                    <label for="useAuth" class="ml-2 block text-sm text-gray-900">
+                        Use Authentication
+                    </label>
+                </div>
+            </div>
+            
+            <div id="authFields" class="hidden space-y-4">
+                <div>
+                    <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+                    <input type="text" id="username" name="username" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" id="password" name="password" 
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <div id="statusMessage" class="hidden rounded-md p-4 mb-4">
+            </div>
+            
+            <div class="flex items-center justify-between pt-4">
+                <button type="submit" 
+                        class="inline-flex justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Connect
+                </button>
+                <a href="/" class="text-sm text-gray-500 hover:text-gray-700">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const useAuthCheckbox = document.getElementById('useAuth');
+    const authFields = document.getElementById('authFields');
+    const connectForm = document.getElementById('connectForm');
+    const statusMessage = document.getElementById('statusMessage');
+
+    useAuthCheckbox.addEventListener('change', function() {
+        authFields.classList.toggle('hidden', !this.checked);
+    });
+
+    connectForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(connectForm);
+        
+        try {
+            const response = await fetch('/api/connect', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            statusMessage.classList.remove('hidden');
+            if (data.status === 'success') {
+                statusMessage.className = 'rounded-md p-4 mb-4 bg-green-50 text-green-700';
+                statusMessage.textContent = data.message;
+                setTimeout(() => {
+                    window.location.href = '/dashboard';
+                }, 1000);
+            } else {
+                statusMessage.className = 'rounded-md p-4 mb-4 bg-red-50 text-red-700';
+                statusMessage.textContent = data.message;
+            }
+        } catch (error) {
+            statusMessage.classList.remove('hidden');
+            statusMessage.className = 'rounded-md p-4 mb-4 bg-red-50 text-red-700';
+            statusMessage.textContent = 'Connection failed. Please try again.';
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}
